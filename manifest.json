@@ -1,0 +1,25 @@
+{
+  "name" : "timer",
+  "host" : {
+    "app" : "XD",
+    "minVersion" : "13.0.0"
+  },
+  "description" : "Sample plugin for Adobe XD, providing starter project scaffolding.",
+  "id" : "407cdec8",
+  "icons" : [ {
+    "path" : "images/icon.png",
+    "width" : 96,
+    "height" : 96
+  } ],
+  "uiEntryPoints" : [ {
+    "label" : "Countdown Timer",
+    "type" : "menu",
+    "commandId" : "countdownTimer"
+  },
+  {
+    "label" : "Make Animation Strips",
+    "type" : "menu",
+    "commandId" : "makeAnimationStrips"
+  } ],
+  "version" : "1.0.0"
+}
