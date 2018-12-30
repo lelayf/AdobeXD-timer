@@ -6,6 +6,7 @@
 const { alert, error, confirm } = require("./lib/dialogs.js");
 
 var {Text, Rectangle, Color} = require("scenegraph");
+let commands = require("commands");
 
 async function countdownTimer(selection) {
 
@@ -64,6 +65,7 @@ function makeAnimationStrips(selection) {
     const endMinute = Number( endMinuteTens + endMinuteUnits );
 
     const minuteSpan = startMinute - endMinute ;
+    const minuteTensSpan = Number(startMinuteTens) - Number(endMinuteTens) ;
     console.log(startMinute + " " + endMinute+ " " + minuteSpan);
 
     // const previousStart = Number(startTime[pos-1]);
@@ -76,47 +78,84 @@ function makeAnimationStrips(selection) {
     const endMinuteUnitsStrip = new Text();
 
     // Minutes tens 
-    startMinuteTensStrip.text  = new String("");
-    var j = Number(startMinuteTens); 
-    while( j > Number(endMinuteTens) ){
+    startMinuteTensStrip.text  = new String("") ;
+    var j = Number(endMinuteTens); 
+    while( j <  Number(startMinuteTens)){
         startMinuteTensStrip.text += new String(j);
         startMinuteTensStrip.text += "\n";
-        j -= 1;
+        j += 1;
     }
-    startMinuteTensStrip.text += endMinuteTens;
+    startMinuteTensStrip.text += startMinuteTens;
     endMinuteTensStrip.text = startMinuteTensStrip.text;  
 
     // Minutes units
     startMinuteUnitsStrip.text = new String("");
-    var j = startMinute; 
-    while( j > endMinute ){
+    var j = endMinute; 
+    while( j < startMinute ){
         startMinuteUnitsStrip.text += new String(j%10);
         startMinuteUnitsStrip.text += "\n";
-        j -= 1;
+        j += 1;
     }
-    startMinuteUnitsStrip.text += endMinuteUnits;
+    startMinuteUnitsStrip.text += startMinuteUnits;
     endMinuteUnitsStrip.text = startMinuteUnitsStrip.text;  
 
     // display
     startMinuteTensStrip.fill = new Color("#FF0000");     
     startMinuteTensStrip.fontSize = 30;
+    startMinuteTensStrip.lineSpacing = startMinuteTensStrip.fontSize + 4 ;
+
     startMinuteUnitsStrip.fill = new Color("#FF0000");     
     startMinuteUnitsStrip.fontSize = 30;
+    startMinuteUnitsStrip.lineSpacing = startMinuteUnitsStrip.fontSize + 4 ;
+
+    console.log(startMinuteUnitsStrip.lineSpacing);
 
     endMinuteTensStrip.fill = new Color("#FF0000");     
     endMinuteTensStrip.fontSize = 30;
+    endMinuteTensStrip.lineSpacing = endMinuteTensStrip.fontSize + 4 ;
+
     endMinuteUnitsStrip.fill = new Color("#FF0000");     
     endMinuteUnitsStrip.fontSize = 30;
+    endMinuteUnitsStrip.lineSpacing = endMinuteUnitsStrip.fontSize + 4 ;
 
     selection.items[0].parent.addChild(startMinuteTensStrip); 
     selection.items[0].parent.addChild(startMinuteUnitsStrip);   
     selection.items[1].parent.addChild(endMinuteTensStrip); 
     selection.items[1].parent.addChild(endMinuteUnitsStrip);   
 
-    startMinuteTensStrip.moveInParentCoordinates(x, y);   
-    startMinuteUnitsStrip.moveInParentCoordinates(x+20, y);
-    endMinuteTensStrip.moveInParentCoordinates(x, y);   
-    endMinuteUnitsStrip.moveInParentCoordinates(x+20, y);
+    //console.log(startMinuteTensStrip.height);
+    startMinuteTensStrip.height = minuteTensSpan * (startMinuteTensStrip.lineSpacing) - 1 ; 
+    console.log("startMinuteTensStrip.lineSpacing=" + startMinuteTensStrip.lineSpacing) ; 
+    startMinuteTensStrip.moveInParentCoordinates(x, 34-startMinuteTensStrip.height);   
+    startMinuteUnitsStrip.height = minuteSpan * (startMinuteUnitsStrip.lineSpacing) - 1 ; 
+    startMinuteUnitsStrip.moveInParentCoordinates(x+20, 34-startMinuteUnitsStrip.height); 
+    
+    endMinuteTensStrip.moveInParentCoordinates(x, 34);   
+    endMinuteUnitsStrip.moveInParentCoordinates(x+20, 34);
+
+    const rectStart = new Rectangle();
+    rectStart.width = 100;
+    rectStart.height = 34;
+    rectStart.name = "Mask" ; 
+    selection.items[0].parent.addChild(rectStart); 
+    rectStart.moveInParentCoordinates(0,8);
+
+    const rectEnd = new Rectangle();
+    rectEnd.width = 100;
+    rectEnd.height = 34;
+    rectEnd.name = "Mask" ; 
+    selection.items[1].parent.addChild(rectEnd); 
+    rectEnd.moveInParentCoordinates(0,8);
+
+    selection.items = [startMinuteTensStrip, startMinuteUnitsStrip, rectStart];
+    commands.createMaskGroup();
+    let startMaskedGroup = selection.items[0];
+    startMaskedGroup.name = "CounterMask" ;
+
+    selection.items = [endMinuteTensStrip, endMinuteUnitsStrip, rectEnd];
+    commands.createMaskGroup();
+    let endMaskedGroup = selection.items[0];
+    endMaskedGroup.name = "CounterMask" ;   
 
 }
 
