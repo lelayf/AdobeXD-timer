@@ -120,6 +120,17 @@ function makeAnimationStrips(selection) {
     startSecondTensStrip.text += startSecondTens;
     endSecondTensStrip.text = startSecondTensStrip.text;  
 
+    // Seconds units 
+    startSecondUnitsStrip.text   = new String("") ;
+    var fastCycles = 10-Number(endSecondUnits)+Number(startSecondUnits)+(cycles-1)*10 ; 
+    console.log("fastCycles=" + fastCycles) ;
+    for( var j=0; j< fastCycles; j++){
+        startSecondUnitsStrip.text += new String( (Number(endSecondUnits)+j) % 10 ) ;
+        startSecondUnitsStrip.text += "\n";
+    }
+    startSecondUnitsStrip.text += startSecondUnits;
+    endSecondUnitsStrip.text = startSecondUnitsStrip.text;  
+
 
     // column
     columnStart.text    = ":" ;
@@ -158,16 +169,26 @@ function makeAnimationStrips(selection) {
     endSecondTensStrip.fontSize = 30 ;
     endSecondTensStrip.lineSpacing = endSecondTensStrip.fontSize + 4;
 
+    startSecondUnitsStrip.fill = new Color("#FF0000");     
+    startSecondUnitsStrip.fontSize = 30 ;
+    startSecondUnitsStrip.lineSpacing = startSecondUnitsStrip.fontSize + 4;
+
+    endSecondUnitsStrip.fill = new Color("#FF0000");     
+    endSecondUnitsStrip.fontSize = 30 ;
+    endSecondUnitsStrip.lineSpacing = endSecondUnitsStrip.fontSize + 4;
+
 
     // add to artboards
     selection.items[0].parent.addChild(startMinuteTensStrip); 
     selection.items[0].parent.addChild(startMinuteUnitsStrip);   
     selection.items[0].parent.addChild(columnStart);
     selection.items[0].parent.addChild(startSecondTensStrip);   
+    selection.items[0].parent.addChild(startSecondUnitsStrip);
     selection.items[1].parent.addChild(endMinuteTensStrip); 
     selection.items[1].parent.addChild(endMinuteUnitsStrip);
     selection.items[1].parent.addChild(columnEnd);
-    selection.items[1].parent.addChild(endSecondTensStrip);   
+    selection.items[1].parent.addChild(endSecondTensStrip);
+    selection.items[1].parent.addChild(endSecondUnitsStrip);   
 
     // reposition
     startMinuteTensStrip.height = minuteTensSpan * startMinuteTensStrip.lineSpacing - 1 ; 
@@ -177,33 +198,36 @@ function makeAnimationStrips(selection) {
     columnStart.moveInParentCoordinates(x+40,34);
     startSecondTensStrip.height = cycles * startSecondTensStrip.lineSpacing - 1 ; 
     startSecondTensStrip.moveInParentCoordinates(x+50, 34-startSecondTensStrip.height); 
+    startSecondUnitsStrip.height = fastCycles * startSecondUnitsStrip.lineSpacing - 1 ; 
+    startSecondUnitsStrip.moveInParentCoordinates(x+70, 34-startSecondUnitsStrip.height); 
  
     endMinuteTensStrip.moveInParentCoordinates(x, 34);   
     endMinuteUnitsStrip.moveInParentCoordinates(x+20, 34);
     columnEnd.moveInParentCoordinates(x+40, 34);
     endSecondTensStrip.moveInParentCoordinates(x+50, 34);
+    endSecondUnitsStrip.moveInParentCoordinates(x+70, 34);
 
     // add masks 
     const rectStart = new Rectangle();
-    rectStart.width = 150;
+    rectStart.width = 180;
     rectStart.height = 34;
     rectStart.name = "Mask" ; 
     selection.items[0].parent.addChild(rectStart); 
     rectStart.moveInParentCoordinates(0,8);
 
     const rectEnd = new Rectangle();
-    rectEnd.width = 150;
+    rectEnd.width = 180;
     rectEnd.height = 34;
     rectEnd.name = "Mask" ; 
     selection.items[1].parent.addChild(rectEnd); 
     rectEnd.moveInParentCoordinates(0,8);
 
-    selection.items = [startMinuteTensStrip, startMinuteUnitsStrip, columnStart, startSecondTensStrip, rectStart];
+    selection.items = [startMinuteTensStrip, startMinuteUnitsStrip, columnStart, startSecondTensStrip, startSecondUnitsStrip, rectStart];
     commands.createMaskGroup();
     let startMaskedGroup = selection.items[0];
     startMaskedGroup.name = "CounterMask" ;
 
-    selection.items = [endMinuteTensStrip, endMinuteUnitsStrip, columnEnd, endSecondTensStrip, rectEnd];
+    selection.items = [endMinuteTensStrip, endMinuteUnitsStrip, columnEnd, endSecondTensStrip, endSecondUnitsStrip, rectEnd];
     commands.createMaskGroup();
     let endMaskedGroup = selection.items[0];
     endMaskedGroup.name = "CounterMask" ;   
