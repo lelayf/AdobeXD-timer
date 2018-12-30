@@ -1,65 +1,149 @@
 /*
- * Sample plugin scaffolding for Adobe XD.
+*  Countdown Timer Adobe XD plugin
+ * This lets the user create all elements for a countdown timer to auto-animate between two artboards.
  *
  * Visit http://adobexdplatform.com/ for API docs and more sample code.
  */
-const { alert, error, confirm } = require("./lib/dialogs.js");
 
-var {Text, Rectangle, Color} = require("scenegraph");
-let commands = require("commands");
+var {Text, Rectangle, Color} = require("scenegraph") ;
+let commands = require("commands") ;
+const h = require("./h") ;
+const fs = require("uxp").storage.localFileSystem ;
 
-async function countdownTimer(selection) {
+let dialog ;
+let pluginDataFolder ;
+let settingsFile ; 
+let settings;
+let startTimeValue, endTimeValue, colorValue, fontSizeValue, fontFamilyValue;
 
-        // Go to Plugins > Development > Developer Console to see this log output
-        console.log("Plugin command is running!");
 
-        // Insert a red square at (0, 0) in the current artboard or group/container
-        await showConfirm().then( (feedback) => {
-            var shape = new Rectangle();
-            shape.width = 100;
-            shape.height = 100;
-            shape.fill = new Color("#00f");    
-            switch (feedback.which) {
-                case 0:
-                    /* User canceled */
-                    shape.fill = new Color("#f00");
-                    break;
-                case 1:
-                    /* User clicked Enable */
-                    shape.fill = new Color("#0f0");
-                    break;
+// async function getSettingsFile(pluginDataFolder) {
+//     settingsFile = await pluginDataFolder.getEntry("timer-settings.txt");
+// }
+
+
+// async function readSettings() {
+//     settings = await settingsFile.read();
+// }
+
+async function doSettings(){
+    
+    pluginDataFolder = await fs.getDataFolder() ;
+    settingsFile = await pluginDataFolder.getEntry("timer-settings.txt");
+    settings = await settingsFile.read();      
+    console.log("plugindatafolder=" + pluginDataFolder);
+
+    // getSettingsFile(pluginDataFolder);
+    // readSettings();
+    console.log("settingsFile=" + settingsFile);
+    console.log("settings=" + settings);
+    
+    if(settings === undefined) {
+        console.log("using default settings");
+        [startTimeValue, endTimeValue, colorValue, fontSizeValue, fontFamilyValue] = 
+            ["23:17", "07:44", "#ff0000", "30", "Arial"] ;    
+    } else {
+        console.log("using previous settings");
+        var settingsObj = JSON.parse(settings) ;
+        [startTimeValue, endTimeValue, colorValue, fontSizeValue, fontFamilyValue] = [settingsObj.startTime, settingsObj.endTime, settingsObj.color, settingsObj.fontSize, settingsObj.fontFamily] ;
+    }
+}
+
+async function getDialog(selection) {
+
+    console.log("hello dialog");
+
+    if (dialog == null) {
+
+        console.log("hello dialog 2");
+
+        async function onsubmit() {
+            console.log("onsubmit plugindatafolder=" + pluginDataFolder);
+
+            let values = {
+                startTime: startTime.value,
+                endTime: endTime.value,
+                color: color.value,
+                fontSize: fontSize.value,
+                fontFamily: fontFamily.value
+                //fontFamily: fontFamily.options[Math.max(0, fontFamily.selectedIndex)].value
             }
-            selection.insertionParent.addChild(shape);
-        });
+            
+            const JSONValues = JSON.stringify(values) ;
+
+            console.log("onsubmit: " + JSONValues);
+            
+            let newFile = await pluginDataFolder.createEntry("timer-settings.txt", {overwrite: true}) ;
+            await newFile.write(JSONValues) ;
+
+            await createMaskedTextStrips( selection,
+                                    startTime.value,
+                                    endTime.value ) ;
+    
+            //  dialog is automatically closed after submit unless you call e.preventDefault()
+            dialog.close();    
+        }
+                        
+        let startTime, endTime, color, fontSize, fontFamily ;
+
+        console.log("startTimeValue" + startTimeValue);
+
+        dialog =
+            h("dialog",
+                h("form", { method:"dialog", style: { width: 320 }, onsubmit },
+                    h("div", { class: "row" },
+                        h("label",
+                            h("span", "Start Time (mm:ss)"),
+                            startTime = h("input", { value: startTimeValue })
+                        ),
+                        h("label",
+                            h("span", "End Time (mm:ss)"),
+                            endTime = h("input", { value: endTimeValue })
+                        )
+                    ),
+                    h("div", { class: "row" },
+                        h("label",
+                            h("span", "Font Color hex #"),
+                            color = h("input", { value: colorValue })
+                        )
+                    ),
+                    h("div", { class: "row" },
+                        h("label",
+                            h("span", "Font size (px)"),
+                            fontSize = h("input", { value: fontSizeValue })
+                        )
+                    ),
+                    h("div", { class: "row" },
+                        h("label",
+                            h("span", "Font family"),
+                            fontFamily = h("input", { value: fontFamilyValue })
+                        )
+                    ),
+                    h("footer",
+                        h("button", { uxpVariant: "primary", onclick(e) { dialog.close("Cancelled") } }, "Cancel"),
+                        h("button", { uxpVariant: "cta", type:"submit", onclick(e) { onsubmit(); e.preventDefault() } }, "Create Timer Elements")
+                )
+            )
+        );
+
+        return dialog;        
+    }
 }
 
-async function showAlert() {
-    /* we'll display a dialog here */
-    await alert("Countdown Timer", //[1]
-    "In order to function correctly, this plugin requires access to your wallet. Please send me money."); //[2]
-}
-
-
-async function showConfirm(){
-    console.log("showConfirm");
-    const feedback = await confirm("Which color do you want your square to be?", //[1]
-    "Color is always meaningful, choose wisely.", //[2]
-    ["Red", "Green"] /*[3]*/ );
-    return feedback;
-}
-
-function makeAnimationStrips(selection) {
+async function createMaskedTextStrips(selection, startTime, endTime) {
 
     const x = 20 ;
     const y = 50 ;
 
-    const start = selection.items[0].text ;
-    const end   = selection.items[1].text ;
+    // const start = selection.items[0].text ;
+    // const end   = selection.items[1].text ;
+    const start = startTime ;
+    const end   = endTime ;
 
     const startMinuteTens   = start[0] ;
     const startMinuteUnits  = start[1] ;
-    const startSecondTens  = start[3] ;
-    const startSecondUnits = start[4] ;
+    const startSecondTens   = start[3] ;
+    const startSecondUnits  = start[4] ;
 
     const startMinute       = Number( startMinuteTens + startMinuteUnits ) ;
     const startSecond       = Number( startSecondTens + startSecondUnits) ;
@@ -95,8 +179,8 @@ function makeAnimationStrips(selection) {
         startMinuteTensStrip.text += "\n";
         j += 1;
     }
-    startMinuteTensStrip.text += startMinuteTens;
-    endMinuteTensStrip.text = startMinuteTensStrip.text;  
+    startMinuteTensStrip.text   += startMinuteTens;
+    endMinuteTensStrip.text     = startMinuteTensStrip.text;  
 
     // Minutes units
     startMinuteUnitsStrip.text = new String("");
@@ -106,8 +190,8 @@ function makeAnimationStrips(selection) {
         startMinuteUnitsStrip.text += "\n";
         j += 1;
     }
-    startMinuteUnitsStrip.text += startMinuteUnits;
-    endMinuteUnitsStrip.text = startMinuteUnitsStrip.text;  
+    startMinuteUnitsStrip.text  += startMinuteUnits;
+    endMinuteUnitsStrip.text    = startMinuteUnitsStrip.text;  
 
     // Seconds tens 
     startSecondTensStrip.text   = new String("") ;
@@ -179,56 +263,70 @@ function makeAnimationStrips(selection) {
 
 
     // add to artboards
-    selection.items[0].parent.addChild(startMinuteTensStrip); 
-    selection.items[0].parent.addChild(startMinuteUnitsStrip);   
-    selection.items[0].parent.addChild(columnStart);
-    selection.items[0].parent.addChild(startSecondTensStrip);   
-    selection.items[0].parent.addChild(startSecondUnitsStrip);
-    selection.items[1].parent.addChild(endMinuteTensStrip); 
-    selection.items[1].parent.addChild(endMinuteUnitsStrip);
-    selection.items[1].parent.addChild(columnEnd);
-    selection.items[1].parent.addChild(endSecondTensStrip);
-    selection.items[1].parent.addChild(endSecondUnitsStrip);   
+    await selection.items[0].addChild(startMinuteTensStrip); 
+    await selection.items[0].addChild(startMinuteUnitsStrip);   
+    await selection.items[0].addChild(columnStart);
+    await selection.items[0].addChild(startSecondTensStrip);   
+    await selection.items[0].addChild(startSecondUnitsStrip);
+    await selection.items[1].addChild(endMinuteTensStrip); 
+    await selection.items[1].addChild(endMinuteUnitsStrip);
+    await selection.items[1].addChild(columnEnd);
+    await selection.items[1].addChild(endSecondTensStrip);
+    await selection.items[1].addChild(endSecondUnitsStrip);   
+
+    // selection.items[0].parent.addChild(startMinuteTensStrip); 
+    // selection.items[0].parent.addChild(startMinuteUnitsStrip);   
+    // selection.items[0].parent.addChild(columnStart);
+    // selection.items[0].parent.addChild(startSecondTensStrip);   
+    // selection.items[0].parent.addChild(startSecondUnitsStrip);
+    // selection.items[1].parent.addChild(endMinuteTensStrip); 
+    // selection.items[1].parent.addChild(endMinuteUnitsStrip);
+    // selection.items[1].parent.addChild(columnEnd);
+    // selection.items[1].parent.addChild(endSecondTensStrip);
+    // selection.items[1].parent.addChild(endSecondUnitsStrip);   
+
 
     // reposition
     startMinuteTensStrip.height = minuteTensSpan * startMinuteTensStrip.lineSpacing - 1 ; 
-    startMinuteTensStrip.moveInParentCoordinates(x, 34-startMinuteTensStrip.height);   
+    await startMinuteTensStrip.moveInParentCoordinates(x, 34-startMinuteTensStrip.height);   
     startMinuteUnitsStrip.height = minuteSpan * startMinuteUnitsStrip.lineSpacing - 1 ; 
-    startMinuteUnitsStrip.moveInParentCoordinates(x+20, 34-startMinuteUnitsStrip.height); 
-    columnStart.moveInParentCoordinates(x+40,34);
+    await startMinuteUnitsStrip.moveInParentCoordinates(x+20, 34-startMinuteUnitsStrip.height); 
+    await columnStart.moveInParentCoordinates(x+40,34);
     startSecondTensStrip.height = cycles * startSecondTensStrip.lineSpacing - 1 ; 
-    startSecondTensStrip.moveInParentCoordinates(x+50, 34-startSecondTensStrip.height); 
+    await startSecondTensStrip.moveInParentCoordinates(x+50, 34-startSecondTensStrip.height); 
     startSecondUnitsStrip.height = fastCycles * startSecondUnitsStrip.lineSpacing - 1 ; 
-    startSecondUnitsStrip.moveInParentCoordinates(x+70, 34-startSecondUnitsStrip.height); 
+    await startSecondUnitsStrip.moveInParentCoordinates(x+70, 34-startSecondUnitsStrip.height); 
  
-    endMinuteTensStrip.moveInParentCoordinates(x, 34);   
-    endMinuteUnitsStrip.moveInParentCoordinates(x+20, 34);
-    columnEnd.moveInParentCoordinates(x+40, 34);
-    endSecondTensStrip.moveInParentCoordinates(x+50, 34);
-    endSecondUnitsStrip.moveInParentCoordinates(x+70, 34);
+    await endMinuteTensStrip.moveInParentCoordinates(x, 34);   
+    await endMinuteUnitsStrip.moveInParentCoordinates(x+20, 34);
+    await columnEnd.moveInParentCoordinates(x+40, 34);
+    await endSecondTensStrip.moveInParentCoordinates(x+50, 34);
+    await endSecondUnitsStrip.moveInParentCoordinates(x+70, 34);
 
     // add masks 
     const rectStart = new Rectangle();
     rectStart.width = 180;
     rectStart.height = 34;
     rectStart.name = "Mask" ; 
-    selection.items[0].parent.addChild(rectStart); 
-    rectStart.moveInParentCoordinates(0,8);
+    await selection.items[0].addChild(rectStart); 
+    // selection.items[0].parent.addChild(rectStart); 
+    await rectStart.moveInParentCoordinates(0,8);
 
     const rectEnd = new Rectangle();
     rectEnd.width = 180;
     rectEnd.height = 34;
     rectEnd.name = "Mask" ; 
-    selection.items[1].parent.addChild(rectEnd); 
-    rectEnd.moveInParentCoordinates(0,8);
+    await selection.items[1].addChild(rectEnd); 
+    // selection.items[1].parent.addChild(rectEnd); 
+    await rectEnd.moveInParentCoordinates(0,8);
 
     selection.items = [startMinuteTensStrip, startMinuteUnitsStrip, columnStart, startSecondTensStrip, startSecondUnitsStrip, rectStart];
-    commands.createMaskGroup();
+    await commands.createMaskGroup();
     let startMaskedGroup = selection.items[0];
     startMaskedGroup.name = "CounterMask" ;
 
     selection.items = [endMinuteTensStrip, endMinuteUnitsStrip, columnEnd, endSecondTensStrip, endSecondUnitsStrip, rectEnd];
-    commands.createMaskGroup();
+    await commands.createMaskGroup();
     let endMaskedGroup = selection.items[0];
     endMaskedGroup.name = "CounterMask" ;   
 
@@ -236,7 +334,12 @@ function makeAnimationStrips(selection) {
 
 module.exports = {
     commands: {
-        countdownTimer,
-        makeAnimationStrips
+        makeCountdownTimer : async function (selection, documentRoot) {
+            (async () => {
+                await doSettings();
+                dialog = await getDialog(selection);
+                document.body.appendChild(dialog).showModal();
+            })();
+        }
     }
 };

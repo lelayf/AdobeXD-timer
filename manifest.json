@@ -14,12 +14,8 @@
   "uiEntryPoints" : [ {
     "label" : "Countdown Timer",
     "type" : "menu",
-    "commandId" : "countdownTimer"
-  },
-  {
-    "label" : "Make Animation Strips",
-    "type" : "menu",
-    "commandId" : "makeAnimationStrips"
-  } ],
+    "commandId" : "makeCountdownTimer"
+  }
+],
   "version" : "1.0.0"
 }
