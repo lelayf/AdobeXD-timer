@@ -47,86 +47,78 @@ async function showConfirm(){
     return feedback;
 }
 
-function createText(selection, startDigit, endDigit, pos, x, y) {
-
-    console.log(startDigit + " " + endDigit);
-    console.log(typeof(startDigit));
-    
-    const startTime = selection.items[0].text;
-    const endTime = selection.items[1].text;
-    const previousStart = Number(startTime[pos-1]);
-    const previousEnd = Number(endTime[pos-1]);
-    const replication = previousStart-previousEnd;
-
-    const startStrip = new Text();
-    const endStrip = new Text();
-    const sd = Number(startDigit); // 1
-    const ed = Number(endDigit);   // 0
-    
-    if(pos == 0){
-        var j = sd ;
-        startStrip.text = new String("");
-        while( j > ed ){
-            startStrip.text += new String(j);
-            startStrip.text += "\n";
-            j -= 1;          
-        }
-        startStrip.text += endDigit;
-    }
-
-    if(pos == 1){
-        var j = sd ;
-        startStrip.text = new String("");
-        var appends = 0;
-        while( appends < (replication*10)-1 ){
-            // while( j > ed ){
-            startStrip.text += new String(j);
-            startStrip.text += "\n";
-            j -= 1;
-            if(j <0) {
-                j = 9;
-            }
-            appends +=1;
-        }
-        startStrip.text += endDigit;
-    }
-
-    endStrip.text = startStrip.text; 
-
-    console.log(startStrip + " " + endStrip);
-    // console.log(typeof(startDigit));
-
-
-    startStrip.fill = new Color("#FF0000");     
-    startStrip.fontSize = 30;
-    endStrip.fill = new Color("#FF0000");     
-    endStrip.fontSize = 30;
-
-    console.log(selection.items[0].parent);
-    console.log(selection.items[1].parent);
-    selection.items[0].parent.addChild(startStrip); 
-    //selection.insertionParent.addChild(startStrip);   
-    selection.items[1].parent.addChild(endStrip);   
-    //selection.insertionParent.addChild(endStrip);   
-
-    startStrip.moveInParentCoordinates(x, y);   
-    endStrip.moveInParentCoordinates(x, y);   
-}
-
 function makeAnimationStrips(selection) {
 
-    // Go to Plugins > Development > Developer Console to see this log output
-    const startTime = selection.items[0].text;
-    const endTime = selection.items[1].text;
+    const x = 20;
+    const y = 50;
 
-    console.log(startTime + " " + endTime);
+    const start = selection.items[0].text;
+    const end   = selection.items[1].text;
 
-    createText(selection, startTime[1], endTime[1], 1, 20+(0*30), 50);
-    // for( var i=0; i< startTime.length; i++){
-    //     createText(selection, startTime[i], endTime[i], i, 20+(i*30), 50);
-    // }    
+    const startMinuteTens = start[0];
+    const startMinuteUnits = start[1];
+    const startMinute = Number( startMinuteTens + startMinuteUnits );
+
+    const endMinuteTens = end[0];
+    const endMinuteUnits = end[1];
+    const endMinute = Number( endMinuteTens + endMinuteUnits );
+
+    const minuteSpan = startMinute - endMinute ;
+    console.log(startMinute + " " + endMinute+ " " + minuteSpan);
+
+    // const previousStart = Number(startTime[pos-1]);
+    // const previousEnd = Number(endTime[pos-1]);
+    // const replication = previousStart-previousEnd;
+
+    const startMinuteTensStrip = new Text();
+    const startMinuteUnitsStrip = new Text();
+    const endMinuteTensStrip = new Text();
+    const endMinuteUnitsStrip = new Text();
+
+    // Minutes tens 
+    startMinuteTensStrip.text  = new String("");
+    var j = Number(startMinuteTens); 
+    while( j > Number(endMinuteTens) ){
+        startMinuteTensStrip.text += new String(j);
+        startMinuteTensStrip.text += "\n";
+        j -= 1;
+    }
+    startMinuteTensStrip.text += endMinuteTens;
+    endMinuteTensStrip.text = startMinuteTensStrip.text;  
+
+    // Minutes units
+    startMinuteUnitsStrip.text = new String("");
+    var j = startMinute; 
+    while( j > endMinute ){
+        startMinuteUnitsStrip.text += new String(j%10);
+        startMinuteUnitsStrip.text += "\n";
+        j -= 1;
+    }
+    startMinuteUnitsStrip.text += endMinuteUnits;
+    endMinuteUnitsStrip.text = startMinuteUnitsStrip.text;  
+
+    // display
+    startMinuteTensStrip.fill = new Color("#FF0000");     
+    startMinuteTensStrip.fontSize = 30;
+    startMinuteUnitsStrip.fill = new Color("#FF0000");     
+    startMinuteUnitsStrip.fontSize = 30;
+
+    endMinuteTensStrip.fill = new Color("#FF0000");     
+    endMinuteTensStrip.fontSize = 30;
+    endMinuteUnitsStrip.fill = new Color("#FF0000");     
+    endMinuteUnitsStrip.fontSize = 30;
+
+    selection.items[0].parent.addChild(startMinuteTensStrip); 
+    selection.items[0].parent.addChild(startMinuteUnitsStrip);   
+    selection.items[1].parent.addChild(endMinuteTensStrip); 
+    selection.items[1].parent.addChild(endMinuteUnitsStrip);   
+
+    startMinuteTensStrip.moveInParentCoordinates(x, y);   
+    startMinuteUnitsStrip.moveInParentCoordinates(x+20, y);
+    endMinuteTensStrip.moveInParentCoordinates(x, y);   
+    endMinuteUnitsStrip.moveInParentCoordinates(x+20, y);
+
 }
-
 
 module.exports = {
     commands: {
